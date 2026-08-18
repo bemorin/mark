@@ -77,11 +77,7 @@ Release artifacts are attached to [GitHub Releases](https://github.com/bemorin/m
 
 ### Windows
 
-Download and run:
-
-```text
-Mark-Setup-<version>-x64.exe
-```
+Download the latest installer from [Releases](https://github.com/bemorin/mark/releases) and run the setup.
 
 The installer registers Markdown file associations. Windows still lets the user choose which application is the default for a file type.
 
@@ -104,11 +100,7 @@ Public macOS binaries are not currently signed or notarized, so Gatekeeper may w
 
 ### Ubuntu / Debian
 
-Install the `.deb` package:
-
-```bash
-sudo apt install ./Mark-<version>-x64.deb
-```
+Download the latest `.deb` from [Releases](https://github.com/bemorin/mark/releases) and install it.
 
 An AppImage is also generated for portable use. Most Linux desktop environments let you make Mark the default for `.md` files from the file manager's **Open With** or **Properties** dialog.
 
