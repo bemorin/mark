@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Mark</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app" id="app" data-view="split">
+      <header class="topbar">
+        <div class="document-name" aria-live="polite">
+          <span id="dirtyDot" class="dirty-dot" aria-hidden="true"></span>
+          <span id="fileName" data-i18n="untitled">Sans titre.md</span>
+        </div>
+        <div class="topbar-actions">
+          <button id="tocButton" class="icon-button" type="button" data-i18n-aria="tocOpen" data-i18n-title="tocButtonTitle" aria-label="Ouvrir la table des matières" title="Table des matières — Ctrl/⌘ + Shift + T">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="5.5" cy="7" r="0.75"></circle>
+              <circle cx="5.5" cy="12" r="0.75"></circle>
+              <circle cx="5.5" cy="17" r="0.75"></circle>
+              <path d="M9 7h10M9 12h10M9 17h10"></path>
+            </svg>
+          </button>
+          <button id="helpButton" class="icon-button" type="button" data-i18n-aria="helpOpen" data-i18n-title="helpButtonTitle" aria-label="Ouvrir l’aide" title="Aide — Ctrl/⌘ + /">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="12" cy="12" r="8.5"></circle>
+              <path d="M9.8 9.2a2.35 2.35 0 0 1 4.55.8c0 1.75-2.35 2-2.35 3.75"></path>
+              <path d="M12 17.25h.01"></path>
+            </svg>
+          </button>
+          <button id="menuButton" class="icon-button menu-toggle-button" type="button" aria-label="Masquer la barre de menus" title="Masquer la barre de menus — Ctrl/⌘ + Shift + M">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M5 8h14M5 12h14M5 16h14"></path>
+            </svg>
+          </button>
+        </div>
+      </header>
+
+      <section id="findBar" class="find-bar" role="search" data-i18n-aria="findReplace" aria-label="Rechercher et remplacer" hidden>
+        <div class="find-row">
+          <button id="toggleReplace" class="find-icon-button" type="button" data-i18n-aria="showReplace" data-i18n-title="showReplace" aria-label="Afficher le remplacement" title="Afficher le remplacement">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 7 5 5-5 5"></path></svg>
+          </button>
+          <input id="findInput" class="find-input" type="text" autocomplete="off" spellcheck="false" data-i18n-aria="findText" data-i18n-placeholder="findPlaceholder" aria-label="Texte à rechercher" placeholder="Rechercher" />
+          <span id="findCount" class="find-count" aria-live="polite">0 / 0</span>
+          <button id="findPrevious" class="find-icon-button" type="button" data-i18n-aria="previousOccurrence" data-i18n-title="previousTitle" aria-label="Occurrence précédente" title="Précédente — Shift + Entrée">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 14 5-5 5 5"></path></svg>
+          </button>
+          <button id="findNext" class="find-icon-button" type="button" data-i18n-aria="nextOccurrence" data-i18n-title="nextTitle" aria-label="Occurrence suivante" title="Suivante — Entrée">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5"></path></svg>
+          </button>
+          <button id="closeFind" class="find-icon-button" type="button" data-i18n-aria="closeSearch" data-i18n-title="closeSearchTitle" aria-label="Fermer la recherche" title="Fermer — Échap">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7 7 17"></path></svg>
+          </button>
+        </div>
+        <div id="replaceRow" class="find-row replace-row" hidden>
+          <span class="replace-spacer" aria-hidden="true"></span>
+          <input id="replaceInput" class="find-input" type="text" autocomplete="off" spellcheck="false" data-i18n-aria="replaceText" data-i18n-placeholder="replacePlaceholder" aria-label="Texte de remplacement" placeholder="Remplacer par" />
+          <button id="replaceOne" class="find-text-button" type="button" data-i18n="replaceOne">Remplacer</button>
+          <button id="replaceAll" class="find-text-button" type="button" data-i18n="replaceAll">Tout</button>
+        </div>
+      </section>
+
+      <main class="workspace" id="workspace">
+        <section class="pane editor-pane" data-i18n-aria="markdownEditor" aria-label="Éditeur Markdown">
+          <textarea
+            id="editor"
+            data-i18n-aria="markdownContent"
+            aria-label="Contenu Markdown"
+            spellcheck="true"
+            autocomplete="off"
+            autocapitalize="sentences"
+          ></textarea>
+        </section>
+        <div class="divider" aria-hidden="true"></div>
+        <section class="pane preview-pane" data-i18n-aria="markdownPreview" aria-label="Aperçu Markdown">
+          <button
+            id="previewEditButton"
+            class="preview-edit-button"
+            type="button"
+            data-i18n-aria="editPreviewBlock"
+            data-i18n-title="editPreviewBlockTitle"
+            aria-label="Modifier ce bloc dans l’aperçu"
+            aria-hidden="true"
+            title="Modifier le Markdown de ce bloc"
+            tabindex="-1"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="m5 19 3.6-.8L18 8.8 15.2 6 5.8 15.4 5 19Z"></path>
+              <path d="m13.9 7.3 2.8 2.8"></path>
+            </svg>
+          </button>
+          <article id="preview" class="markdown-body"></article>
+        </section>
+      </main>
+
+      <footer class="statusbar">
+        <div class="status-left">
+          <span id="counts">0 mot · 1 ligne</span>
+          <span class="status-separator" aria-hidden="true">·</span>
+          <span id="saveStatus" class="save-status" data-i18n="saved">enregistré</span>
+        </div>
+        <button id="viewMode" class="status-button" type="button" data-i18n-title="changeViewTitle" title="Changer de vue — Ctrl/⌘ + 1, 2 ou 3">partagé</button>
+      </footer>
+    </div>
+
+    <dialog id="helpDialog" class="modal-dialog help-dialog" aria-labelledby="helpTitle">
+      <div class="dialog-shell">
+        <div class="dialog-heading">
+          <div>
+            <p class="eyebrow" data-i18n="helpEyebrow">Aide</p>
+            <h1 id="helpTitle" data-i18n="helpTitle">Raccourcis et syntaxe</h1>
+          </div>
+          <button id="closeHelp" class="icon-button close-button" type="button" data-i18n-aria="closeHelp" aria-label="Fermer l’aide">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M7 7l10 10M17 7 7 17"></path>
+            </svg>
+          </button>
+        </div>
+
+        <div class="dialog-scroll">
+          <div class="help-grid">
+            <section>
+              <h2 data-i18n="formatHeading">Mettre en forme</h2>
+              <dl class="syntax-list">
+                <div><dt><code># Titre</code></dt><dd data-i18n="syntaxMainTitle">Titre principal</dd></div>
+                <div><dt><code>## Sous-titre</code></dt><dd data-i18n="syntaxNextLevel">Niveau suivant</dd></div>
+                <div><dt><code>**gras**</code></dt><dd data-i18n="syntaxBold">Texte important</dd></div>
+                <div><dt><code>*italique*</code></dt><dd data-i18n="syntaxItalic">Emphase légère</dd></div>
+                <div><dt><code>[lien](https://…)</code></dt><dd data-i18n="syntaxWebLink">Lien web</dd></div>
+                <div><dt><code>[nom](&lt;C:/dossier avec espaces&gt;)</code></dt><dd data-i18n="syntaxLocalLink">Fichier ou dossier</dd></div>
+                <div><dt><code>- élément</code></dt><dd data-i18n="syntaxBullet">Liste à puces</dd></div>
+                <div><dt><code>- [ ] tâche</code></dt><dd data-i18n="syntaxTask">Case cliquable dans l’aperçu</dd></div>
+                <div><dt><code>&gt; citation</code></dt><dd data-i18n="syntaxQuote">Bloc de citation</dd></div>
+                <div><dt><code>`code`</code></dt><dd data-i18n="syntaxInlineCode">Code en ligne</dd></div>
+                <div><dt><code>---</code></dt><dd data-i18n="syntaxSeparator">Séparateur</dd></div>
+              </dl>
+            </section>
+
+            <section>
+              <h2 data-i18n="shortcutsHeading">Raccourcis</h2>
+              <dl class="shortcut-list">
+                <div><dt><kbd>⌘/Ctrl</kbd><kbd>N</kbd></dt><dd data-i18n="actionNew">Nouveau</dd></div>
+                <div><dt><kbd>⌘/Ctrl</kbd><kbd>O</kbd></dt><dd data-i18n="actionOpen">Ouvrir</dd></div>
+                <div><dt><kbd>⌘/Ctrl</kbd><kbd>S</kbd></dt><dd data-i18n="actionSave">Enregistrer</dd></div>
+                <div><dt><kbd>⌘/Ctrl</kbd><kbd>⇧</kbd><kbd>S</kbd></dt><dd data-i18n="actionSaveAs">Enregistrer sous</dd></div>
+                <div><dt><kbd>⌘/Ctrl</kbd><kbd>F</kbd></dt><dd data-i18n="actionFindReplace">Rechercher / remplacer</dd></div>
+                <div><dt><kbd>⌘/Ctrl</kbd><kbd>H</kbd></dt><dd data-i18n="actionOpenReplace">Ouvrir le remplacement</dd></div>
+                <div><dt><kbd>⌘/Ctrl</kbd><kbd>B</kbd></dt><dd data-i18n="actionBold">Gras</dd></div>
+                <div><dt><kbd>⌘/Ctrl</kbd><kbd>I</kbd></dt><dd data-i18n="actionItalic">Italique</dd></div>
+                <div><dt><kbd>⌘/Ctrl</kbd><kbd>K</kbd></dt><dd data-i18n="actionLink">Lien</dd></div>
+                <div><dt><kbd>⌘/Ctrl</kbd><kbd>E</kbd></dt><dd data-i18n="actionCode">Code</dd></div>
+                <div><dt><kbd>⌘/Ctrl</kbd><kbd>1</kbd></dt><dd data-i18n="actionEditor">Éditeur</dd></div>
+                <div><dt><kbd>⌘/Ctrl</kbd><kbd>2</kbd></dt><dd data-i18n="actionSplit">Vue partagée</dd></div>
+                <div><dt><kbd>⌘/Ctrl</kbd><kbd>3</kbd></dt><dd data-i18n="actionPreview">Aperçu</dd></div>
+                <div><dt><kbd>⌘/Ctrl</kbd><kbd>⇧</kbd><kbd>T</kbd></dt><dd data-i18n="actionToc">Table des matières</dd></div>
+                <div><dt><kbd>⌘/Ctrl</kbd><kbd>⇧</kbd><kbd>M</kbd></dt><dd data-i18n="actionMenuBar">Barre de menus</dd></div>
+                <div><dt><kbd>⌘/Ctrl</kbd><kbd>/</kbd></dt><dd data-i18n="actionHelp">Cette aide</dd></div>
+              </dl>
+            </section>
+          </div>
+
+          <p class="help-note" data-i18n-html="previewEditHelp"><strong>Aperçu éditable :</strong> survole un titre, un paragraphe, une liste, une citation, un tableau ou un bloc de code, puis clique sur le petit crayon qui apparaît à gauche. Valide avec <kbd>⌘/Ctrl</kbd> + <kbd>Entrée</kbd>, ou clique ailleurs.</p>
+          <p class="help-note" data-i18n-html="tocDragHelp"><strong>Réorganiser :</strong> ouvre la table des matières, puis fais glisser la poignée d’un titre. Le déplacement de toute sa section n’est appliqué qu’après validation.</p>
+          <p class="help-note" data-i18n-html="recoveryHelp">Les changements non enregistrés sont copiés localement pour pouvoir être restaurés après une fermeture imprévue. Dépose un fichier <code>.md</code> dans la fenêtre pour le charger dans cette même fenêtre.</p>
+        </div>
+      </div>
+    </dialog>
+
+    <dialog id="tocDialog" class="modal-dialog toc-dialog" aria-labelledby="tocTitle">
+      <div class="dialog-shell">
+        <div class="dialog-heading">
+          <div>
+            <p class="eyebrow" data-i18n="navigationEyebrow">Navigation</p>
+            <h1 id="tocTitle" data-i18n="tocTitle">Table des matières</h1>
+          </div>
+          <button id="closeToc" class="icon-button close-button" type="button" data-i18n-aria="closeToc" aria-label="Fermer la table des matières">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M7 7l10 10M17 7 7 17"></path>
+            </svg>
+          </button>
+        </div>
+        <div class="dialog-scroll toc-scroll">
+          <nav id="tocList" class="toc-list" data-i18n-aria="documentHeadings" aria-label="Titres du document"></nav>
+          <p id="tocEmpty" class="toc-empty" data-i18n-html="tocEmpty" hidden>Ajoute un titre avec <code># Titre</code> pour le voir ici.</p>
+          <div id="tocMoveConfirm" class="toc-move-confirm" role="status" hidden>
+            <p id="tocMoveText"></p>
+            <div class="toc-move-actions">
+              <button id="tocMoveCancel" class="toc-confirm-button" type="button" data-i18n="cancel">Annuler</button>
+              <button id="tocMoveApply" class="toc-confirm-button primary" type="button" data-i18n="apply">Valider</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </dialog>
+
+    <div id="dropOverlay" class="drop-overlay" data-i18n="dropToOpen" aria-hidden="true">Déposer pour ouvrir</div>
+
+    <script src="../../node_modules/marked/lib/marked.umd.js"></script>
+    <script src="../../node_modules/dompurify/dist/purify.min.js"></script>
+    <script src="renderer.js"></script>
+  </body>
+</html>

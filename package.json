@@ -1,0 +1,113 @@
+{
+  "name": "mark-desktop",
+  "version": "1.0.0",
+  "description": "A minimal, local-first Markdown editor with live preview for Windows, macOS, and Linux.",
+  "main": "src/main.js",
+  "author": "Ben Morin",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --publish never",
+    "dist:mac": "electron-builder --mac --publish never",
+    "dist:win": "electron-builder --win nsis --publish never",
+    "dist:linux": "electron-builder --linux --publish never",
+    "dist:win:portable": "electron-builder --win portable --publish never",
+    "check": "node scripts/check-repo.mjs",
+    "dist:mac:universal": "electron-builder --mac --universal --publish never"
+  },
+  "dependencies": {
+    "dompurify": "3.4.13",
+    "marked": "18.0.8"
+  },
+  "devDependencies": {
+    "electron": "43.2.0",
+    "electron-builder": "26.15.7"
+  },
+  "build": {
+    "appId": "app.mark.editor",
+    "productName": "Mark",
+    "asar": true,
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "src/**/*",
+      "package.json",
+      "build/icon.png"
+    ],
+    "mac": {
+      "category": "public.app-category.productivity",
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "icon": "build/icon.icns",
+      "artifactName": "Mark-${version}-${arch}.${ext}",
+      "darkModeSupport": true
+    },
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "icon": "build/icon.ico"
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "category": "Utility",
+      "icon": "build/icons",
+      "artifactName": "Mark-${version}-${arch}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "artifactName": "Mark-Setup-${version}-${arch}.${ext}",
+      "differentialPackage": false
+    },
+    "fileAssociations": [
+      {
+        "ext": [
+          "md",
+          "markdown",
+          "mdown",
+          "mkd"
+        ],
+        "name": "Markdown Document",
+        "description": "Markdown document",
+        "role": "Editor",
+        "mimeType": "text/markdown"
+      }
+    ],
+    "portable": {
+      "artifactName": "Mark-Portable-${version}-${arch}.${ext}"
+    },
+    "compression": "maximum",
+    "electronLanguages": [
+      "fr",
+      "en-US"
+    ],
+    "npmRebuild": false
+  },
+  "keywords": [
+    "markdown",
+    "editor",
+    "desktop",
+    "electron",
+    "local-first",
+    "minimal"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bemorin/mark.git"
+  },
+  "homepage": "https://github.com/bemorin/mark#readme",
+  "bugs": {
+    "url": "https://github.com/bemorin/mark/issues"
+  }
+}
