@@ -321,7 +321,8 @@ let savedContent = '';
 let renderFrame = null;
 let renderTimer = null;
 let recoveryTimer = null;
-let currentView = 'split';
+const storedView = localStorage.getItem('mark:view');
+let currentView = ['editor', 'split', 'preview'].includes(storedView) ? storedView : 'split';
 let dragDepth = 0;
 let scrollLock = false;
 let lastReportedDirty = null;
@@ -655,6 +656,7 @@ function setView(view) {
   if (activePreviewEdit && nextView === 'editor') finishPreviewBlockEdit(true);
   currentView = nextView;
   app.dataset.view = currentView;
+  localStorage.setItem('mark:view', currentView);
   viewSwitchButtons.forEach((button) => {
     const active = button.dataset.view === currentView;
     button.classList.toggle('is-active', active);

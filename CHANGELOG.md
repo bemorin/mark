@@ -17,7 +17,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 - Windows Open with now labels the app as Mark instead of the long package description.
 - File → Recent and File → Pinned are native submenus. Click a file to open it.
 - The status bar shows editor, split, and preview as three explicit view buttons.
-- The app opens in split view.
+- The app opens in split view the first time, then restores the last view the user chose.
 
 ## [1.0.0] - 2026-08-18
 
