@@ -6,10 +6,11 @@ const app = document.getElementById('app');
 const editor = document.getElementById('editor');
 const preview = document.getElementById('preview');
 const fileName = document.getElementById('fileName');
+const pinButton = document.getElementById('pinButton');
 const dirtyDot = document.getElementById('dirtyDot');
 const counts = document.getElementById('counts');
 const saveStatus = document.getElementById('saveStatus');
-const viewModeButton = document.getElementById('viewMode');
+const viewSwitchButtons = [...document.querySelectorAll('.view-switch-button')];
 const tocButton = document.getElementById('tocButton');
 const helpButton = document.getElementById('helpButton');
 const menuButton = document.getElementById('menuButton');
@@ -76,7 +77,11 @@ const translations = {
     markdownContent: 'Contenu Markdown',
     markdownPreview: 'Aperçu Markdown',
     saved: 'enregistré',
-    changeViewTitle: 'Changer de vue — Ctrl/⌘ + 1, 2 ou 3',
+    viewSwitch: 'Changer de vue',
+    viewEditorTitle: 'Éditeur — Ctrl/⌘ + 1',
+    viewSplitTitle: 'Partagé — Ctrl/⌘ + 2',
+    viewPreviewTitle: 'Aperçu — Ctrl/⌘ + 3',
+    viewHelp: '<strong>Vues :</strong> en bas à droite, choisis <em>éditeur</em>, <em>partagé</em> ou <em>aperçu</em>. Raccourcis : <kbd>⌘/Ctrl</kbd> + <kbd>1</kbd>, <kbd>2</kbd> ou <kbd>3</kbd>.',
     helpEyebrow: 'Aide',
     helpTitle: 'Raccourcis et syntaxe',
     closeHelp: 'Fermer l’aide',
@@ -109,6 +114,11 @@ const translations = {
     actionToc: 'Table des matières',
     actionMenuBar: 'Barre de menus',
     actionHelp: 'Cette aide',
+    pinFile: 'Épingler',
+    unpinFile: 'Désépingler',
+    pinNeedsFile: 'Enregistre le fichier pour l’épingler',
+    pinLimit: '3 fichiers épinglés maximum',
+    pinHelp: '<strong>Épinglés :</strong> l’épingle à gauche du nom du fichier ajoute le document ouvert à <em>Fichier → Épinglés</em> (3 maximum). Un second clic la retire.',
     previewEditHelp: '<strong>Aperçu éditable :</strong> survole un titre, un paragraphe, une liste, une citation, un tableau ou un bloc de code, puis clique sur le petit crayon qui apparaît à gauche. Valide avec <kbd>⌘/Ctrl</kbd> + <kbd>Entrée</kbd>, ou clique ailleurs.',
     tocDragHelp: '<strong>Réorganiser :</strong> ouvre la table des matières, puis fais glisser la poignée d’un titre. Le déplacement de toute sa section n’est appliqué qu’après validation.',
     recoveryHelp: 'Les changements non enregistrés sont copiés localement pour pouvoir être restaurés après une fermeture imprévue. Dépose un fichier <code>.md</code> dans la fenêtre pour le charger dans cette même fenêtre.',
@@ -187,7 +197,11 @@ Write here. The preview updates live.
     markdownContent: 'Markdown content',
     markdownPreview: 'Markdown preview',
     saved: 'saved',
-    changeViewTitle: 'Change view — Ctrl/⌘ + 1, 2 or 3',
+    viewSwitch: 'Change view',
+    viewEditorTitle: 'Editor — Ctrl/⌘ + 1',
+    viewSplitTitle: 'Split — Ctrl/⌘ + 2',
+    viewPreviewTitle: 'Preview — Ctrl/⌘ + 3',
+    viewHelp: '<strong>Views:</strong> at the bottom right, choose <em>editor</em>, <em>split</em> or <em>preview</em>. Shortcuts: <kbd>⌘/Ctrl</kbd> + <kbd>1</kbd>, <kbd>2</kbd> or <kbd>3</kbd>.',
     helpEyebrow: 'Help',
     helpTitle: 'Shortcuts and syntax',
     closeHelp: 'Close help',
@@ -220,6 +234,11 @@ Write here. The preview updates live.
     actionToc: 'Table of contents',
     actionMenuBar: 'Menu bar',
     actionHelp: 'This help',
+    pinFile: 'Pin',
+    unpinFile: 'Unpin',
+    pinNeedsFile: 'Save the file to pin it',
+    pinLimit: '3 pinned files maximum',
+    pinHelp: '<strong>Pinned:</strong> the pin to the left of the file name adds the open document to <em>File → Pinned</em> (3 maximum). Click again to remove it.',
     previewEditHelp: '<strong>Editable preview:</strong> hover a heading, paragraph, list, quote, table or code block, then click the small pencil that appears on the left. Apply with <kbd>⌘/Ctrl</kbd> + <kbd>Enter</kbd>, or click elsewhere.',
     tocDragHelp: '<strong>Reorder:</strong> open the table of contents, then drag a heading handle. Its whole section moves only after you confirm.',
     recoveryHelp: 'Unsaved changes are copied locally so they can be restored after an unexpected close. Drop a <code>.md</code> file into the window to load it in that same window.',
@@ -286,6 +305,7 @@ function applyTranslations() {
   document.querySelectorAll('[data-i18n-title]').forEach((element) => {
     element.title = t(element.dataset.i18nTitle);
   });
+  updatePinButton();
 
   const syntaxExamples = locale === 'fr'
     ? ['# Titre', '## Sous-titre', '**gras**', '*italique*', '[lien](https://…)', '[nom](<C:/dossier avec espaces>)', '- élément', '- [ ] tâche', '> citation', '`code`', '---']
@@ -295,11 +315,13 @@ function applyTranslations() {
   });
 }
 let currentFilePath = null;
+let currentPinned = false;
+let currentCanPin = false;
 let savedContent = '';
 let renderFrame = null;
 let renderTimer = null;
 let recoveryTimer = null;
-let currentView = localStorage.getItem('mark:view') || 'split';
+let currentView = 'split';
 let dragDepth = 0;
 let scrollLock = false;
 let lastReportedDirty = null;
@@ -609,6 +631,21 @@ function updateCounts() {
 function updateFileMeta(name, filePathToShow) {
   fileName.textContent = name || t('untitled');
   fileName.title = filePathToShow || t('documentUnsaved');
+  updatePinButton();
+}
+
+function updatePinButton() {
+  if (!pinButton) return;
+  const hasFile = Boolean(currentFilePath);
+  pinButton.classList.toggle('is-pinned', currentPinned);
+  pinButton.disabled = !hasFile || (!currentPinned && !currentCanPin);
+  pinButton.setAttribute('aria-pressed', String(currentPinned));
+  let label = t('pinFile');
+  if (!hasFile) label = t('pinNeedsFile');
+  else if (currentPinned) label = t('unpinFile');
+  else if (!currentCanPin) label = t('pinLimit');
+  pinButton.title = label;
+  pinButton.setAttribute('aria-label', label);
 }
 
 function setView(view) {
@@ -618,18 +655,12 @@ function setView(view) {
   if (activePreviewEdit && nextView === 'editor') finishPreviewBlockEdit(true);
   currentView = nextView;
   app.dataset.view = currentView;
-  localStorage.setItem('mark:view', currentView);
-  viewModeButton.textContent = {
-    editor: t('viewEditor'),
-    split: t('viewSplit'),
-    preview: t('viewPreview'),
-  }[currentView];
+  viewSwitchButtons.forEach((button) => {
+    const active = button.dataset.view === currentView;
+    button.classList.toggle('is-active', active);
+    button.setAttribute('aria-pressed', String(active));
+  });
   if (currentView === 'editor') editor.focus();
-}
-
-function cycleView() {
-  const views = ['editor', 'split', 'preview'];
-  setView(views[(views.indexOf(currentView) + 1) % views.length]);
 }
 
 function cancelPreviewEditHide() {
@@ -1036,6 +1067,8 @@ async function newDocument() {
   cancelRecoveryTimer();
   lastRecoveryAt = 0;
   currentFilePath = null;
+  currentPinned = false;
+  currentCanPin = false;
   editor.value = '';
   savedContent = '';
   updateFileMeta(t('untitled'), null);
@@ -1612,6 +1645,12 @@ replaceAllButton.addEventListener('click', replaceAllMatches);
 tocButton.addEventListener('click', openTableOfContents);
 helpButton.addEventListener('click', openHelp);
 menuButton.addEventListener('click', async () => updateMenuButton(await window.markdownApp.toggleMenuBar()));
+pinButton.addEventListener('click', async () => {
+  const pin = await window.markdownApp.togglePinnedFile();
+  currentPinned = Boolean(pin?.pinned);
+  currentCanPin = Boolean(pin?.canPin);
+  updatePinButton();
+});
 closeHelp.addEventListener('click', () => helpDialog.close());
 closeToc.addEventListener('click', () => tocDialog.close());
 helpDialog.addEventListener('click', (event) => {
@@ -1634,7 +1673,9 @@ window.addEventListener('pointerup', endTocDrag);
 window.addEventListener('pointercancel', endTocDrag);
 tocMoveCancel.addEventListener('click', cancelPendingTocMove);
 tocMoveApply.addEventListener('click', applyPendingTocMove);
-viewModeButton.addEventListener('click', cycleView);
+viewSwitchButtons.forEach((button) => {
+  button.addEventListener('click', () => setView(button.dataset.view));
+});
 
 window.addEventListener('keydown', (event) => {
   if (event.key === 'Escape') {
@@ -1726,6 +1767,8 @@ window.markdownApp.onCommand(async (command, payload) => {
 
 window.markdownApp.onDocumentMeta((meta) => {
   currentFilePath = meta.filePath || null;
+  currentPinned = Boolean(meta.pinned);
+  currentCanPin = Boolean(meta.canPin);
   updateFileMeta(meta.name, currentFilePath);
 });
 

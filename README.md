@@ -79,6 +79,8 @@ Release artifacts are attached to [GitHub Releases](https://github.com/bemorin/m
 
 Download the latest installer from [Releases](https://github.com/bemorin/mark/releases) and run the setup.
 
+After installation, choose **Mark** in Windows **Open with**. Do not browse to the Setup executable in `release/` — that starts the installer again instead of opening the file.
+
 The installer registers Markdown file associations. Windows still lets the user choose which application is the default for a file type.
 
 To make Mark the default app for `.md` files:
@@ -155,7 +157,7 @@ Build output is written to `release/` and is excluded from version control.
 | Save as | `Ctrl/⌘ + Shift + S` |
 | Find | `Ctrl/⌘ + F` |
 | Find and replace | `Ctrl/⌘ + H` |
-| Editor / Split / Preview | `Ctrl/⌘ + 1 / 2 / 3` |
+| Editor / Split / Preview | Status bar buttons, or `Ctrl/⌘ + 1 / 2 / 3` |
 | Table of contents | `Ctrl/⌘ + Shift + T` |
 | Toggle menu bar | `Ctrl/⌘ + Shift + M` |
 | Help | `Ctrl/⌘ + /` |

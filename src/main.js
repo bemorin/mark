@@ -9,6 +9,7 @@ const { fileURLToPath, pathToFileURL } = require('node:url');
 
 const APPLICATION_ID = 'app.mark.editor';
 const MAX_RECENT_FILES = 5;
+const MAX_PINNED_FILES = 3;
 const supportedFileExtensions = new Set(['.md', '.markdown', '.mdown', '.mkd', '.txt']);
 const blockedLaunchExtensions = new Set([
   '.app', '.bat', '.cmd', '.com', '.command', '.desktop', '.exe', '.jar', '.jse', '.lnk',
@@ -24,17 +25,20 @@ let appLocale = 'fr';
 let preferences = {
   menuBarVisible: true,
   recentFiles: [],
+  pinnedFiles: [],
 };
 
 const translations = {
   fr: {
     untitled: 'Sans titre.md',
     noRecent: 'Aucun fichier récent',
+    noPinned: 'Aucun fichier épinglé',
     clearRecent: 'Effacer les fichiers récents',
     file: 'Fichier',
     new: 'Nouveau',
     open: 'Ouvrir…',
     recent: 'Récents',
+    pinned: 'Épinglés',
     save: 'Enregistrer',
     saveAs: 'Enregistrer sous…',
     quit: 'Quitter',
@@ -88,11 +92,13 @@ const translations = {
   en: {
     untitled: 'Untitled.md',
     noRecent: 'No recent files',
+    noPinned: 'No pinned files',
     clearRecent: 'Clear recent files',
     file: 'File',
     new: 'New',
     open: 'Open…',
     recent: 'Recent',
+    pinned: 'Pinned',
     save: 'Save',
     saveAs: 'Save As…',
     quit: 'Quit',
@@ -153,6 +159,7 @@ function t(key, ...args) {
 if (process.platform === 'win32') {
   app.setAppUserModelId?.(APPLICATION_ID);
 }
+app.setName('Mark');
 
 function preferencesPath() {
   return path.join(app.getPath('userData'), 'preferences.json');
@@ -220,19 +227,29 @@ function pathEquals(left, right) {
     : normalizedLeft === normalizedRight;
 }
 
+function existingFilePaths(filePaths, maxCount) {
+  if (!Array.isArray(filePaths)) return [];
+  const seen = [];
+  for (const filePath of filePaths) {
+    if (typeof filePath !== 'string' || !fsSync.existsSync(filePath)) continue;
+    const absolutePath = path.resolve(filePath);
+    if (seen.some((existing) => pathEquals(existing, absolutePath))) continue;
+    seen.push(absolutePath);
+    if (seen.length >= maxCount) break;
+  }
+  return seen;
+}
+
 function loadPreferences() {
   try {
     const parsed = JSON.parse(fsSync.readFileSync(preferencesPath(), 'utf8'));
     preferences = {
       menuBarVisible: parsed.menuBarVisible !== false,
-      recentFiles: Array.isArray(parsed.recentFiles)
-        ? parsed.recentFiles
-            .filter((filePath) => typeof filePath === 'string' && fsSync.existsSync(filePath))
-            .slice(0, MAX_RECENT_FILES)
-        : [],
+      recentFiles: existingFilePaths(parsed.recentFiles, MAX_RECENT_FILES),
+      pinnedFiles: existingFilePaths(parsed.pinnedFiles, MAX_PINNED_FILES),
     };
   } catch {
-    preferences = { menuBarVisible: true, recentFiles: [] };
+    preferences = { menuBarVisible: true, recentFiles: [], pinnedFiles: [] };
   }
 }
 
@@ -349,18 +366,39 @@ function displayName(stateOrPath) {
   return filePath ? path.basename(filePath) : t('untitled');
 }
 
+function isFilePinned(filePath) {
+  return Boolean(filePath) && preferences.pinnedFiles.some((pinnedPath) => pathEquals(pinnedPath, filePath));
+}
+
+function pinStateFor(filePath) {
+  const pinned = isFilePinned(filePath);
+  return {
+    pinned,
+    canPin: Boolean(filePath) && (pinned || preferences.pinnedFiles.length < MAX_PINNED_FILES),
+  };
+}
+
 function sendDocumentMeta(window) {
   const state = stateFor(window);
   if (!state) return;
+  const pin = pinStateFor(state.currentFilePath);
   window.webContents.send('document-meta', {
     filePath: state.currentFilePath,
     name: displayName(state),
+    pinned: pin.pinned,
+    canPin: pin.canPin,
   });
   window.setTitle(`${state.documentIsDirty ? '• ' : ''}${displayName(state)} — Mark`);
   if (process.platform === 'darwin') {
     window.setDocumentEdited(state.documentIsDirty);
     window.setRepresentedFilename(state.currentFilePath || '');
   }
+}
+
+function broadcastDocumentMeta() {
+  BrowserWindow.getAllWindows().forEach((window) => {
+    if (!window.isDestroyed()) sendDocumentMeta(window);
+  });
 }
 
 function sendMenuBarState(window = null) {
@@ -373,13 +411,14 @@ function sendMenuBarState(window = null) {
 function addRecentFile(filePath) {
   if (!filePath) return;
   const absolutePath = path.resolve(filePath);
-  preferences.recentFiles = [
-    absolutePath,
-    ...preferences.recentFiles.filter((recentPath) => !pathEquals(recentPath, absolutePath)),
-  ].slice(0, MAX_RECENT_FILES);
+  preferences.recentFiles = existingFilePaths(
+    [absolutePath, ...preferences.recentFiles],
+    MAX_RECENT_FILES,
+  );
   savePreferences();
   app.addRecentDocument(absolutePath);
   buildMenu();
+  broadcastDocumentMeta();
 }
 
 function clearRecentFiles() {
@@ -387,6 +426,37 @@ function clearRecentFiles() {
   savePreferences();
   app.clearRecentDocuments();
   buildMenu();
+  broadcastDocumentMeta();
+}
+
+function pinFile(filePath) {
+  if (!filePath || typeof filePath !== 'string') return;
+  const absolutePath = path.resolve(filePath);
+  if (!fsSync.existsSync(absolutePath)) return;
+  if (preferences.pinnedFiles.some((pinnedPath) => pathEquals(pinnedPath, absolutePath))) return;
+  if (preferences.pinnedFiles.length >= MAX_PINNED_FILES) return;
+  preferences.pinnedFiles = existingFilePaths(
+    [absolutePath, ...preferences.pinnedFiles],
+    MAX_PINNED_FILES,
+  );
+  savePreferences();
+  buildMenu();
+  broadcastDocumentMeta();
+}
+
+function unpinFile(filePath) {
+  if (!filePath || typeof filePath !== 'string') return;
+  preferences.pinnedFiles = preferences.pinnedFiles.filter((pinnedPath) => !pathEquals(pinnedPath, filePath));
+  savePreferences();
+  buildMenu();
+  broadcastDocumentMeta();
+}
+
+function togglePinnedFile(filePath) {
+  if (!filePath || typeof filePath !== 'string') return pinStateFor(filePath);
+  if (isFilePinned(filePath)) unpinFile(filePath);
+  else pinFile(filePath);
+  return pinStateFor(filePath);
 }
 
 function shortenedFolder(filePath) {
@@ -401,25 +471,34 @@ function recentFileLabel(filePath) {
   return `${file} — ${folder}`;
 }
 
-function recentSubmenu() {
-  const existing = preferences.recentFiles.filter((filePath) => fsSync.existsSync(filePath));
-  if (existing.length !== preferences.recentFiles.length) {
-    preferences.recentFiles = existing.slice(0, MAX_RECENT_FILES);
-    savePreferences();
-  }
+function openFileFromMenu(filePath) {
+  return (_menuItem, browserWindow) => sendCommand(browserWindow || focusedWindow(), 'load-path', filePath);
+}
 
+function fileOpenItems(filePaths, emptyLabel) {
+  const existing = existingFilePaths(filePaths, filePaths.length);
   if (existing.length === 0) {
-    return [{ label: t('noRecent'), enabled: false }];
+    return [{ label: emptyLabel, enabled: false }];
   }
 
+  return existing.map((filePath) => ({
+    label: recentFileLabel(filePath),
+    click: openFileFromMenu(filePath),
+  }));
+}
+
+function recentSubmenu() {
+  const items = fileOpenItems(preferences.recentFiles, t('noRecent'));
+  if (preferences.recentFiles.length === 0) return items;
   return [
-    ...existing.slice(0, MAX_RECENT_FILES).map((filePath) => ({
-      label: recentFileLabel(filePath),
-      click: (_menuItem, browserWindow) => sendCommand(browserWindow || focusedWindow(), 'load-path', filePath),
-    })),
+    ...items,
     { type: 'separator' },
     { label: t('clearRecent'), click: clearRecentFiles },
   ];
+}
+
+function pinnedSubmenu() {
+  return fileOpenItems(preferences.pinnedFiles, t('noPinned'));
 }
 
 function applyMenuBarVisibility(window = null) {
@@ -578,8 +657,8 @@ async function saveMarkdown(window, content, saveAs = false) {
   }
 }
 
-function sendToMenuWindow(command) {
-  return (_menuItem, browserWindow) => sendCommand(browserWindow || focusedWindow(), command);
+function sendToMenuWindow(command, payload) {
+  return (_menuItem, browserWindow) => sendCommand(browserWindow || focusedWindow(), command, payload);
 }
 
 function buildMenu() {
@@ -607,6 +686,7 @@ function buildMenu() {
         { label: t('new'), accelerator: 'CmdOrCtrl+N', click: sendToMenuWindow('new') },
         { label: t('open'), accelerator: 'CmdOrCtrl+O', click: sendToMenuWindow('open') },
         { label: t('recent'), submenu: recentSubmenu() },
+        { label: t('pinned'), submenu: pinnedSubmenu() },
         { type: 'separator' },
         { label: t('save'), accelerator: 'CmdOrCtrl+S', click: sendToMenuWindow('save') },
         { label: t('saveAs'), accelerator: 'CmdOrCtrl+Shift+S', click: sendToMenuWindow('save-as') },
@@ -959,6 +1039,10 @@ onTrusted('window:close-ready', (event) => {
   if (!state) return;
   state.forceClose = true;
   window.close();
+});
+handleTrusted('files:toggle-pin', (event) => {
+  const filePath = stateFor(windowFromEvent(event))?.currentFilePath;
+  return togglePinnedFile(filePath);
 });
 handleTrusted('menu:toggle', () => setMenuBarVisible(!preferences.menuBarVisible));
 handleTrusted('menu:get-state', () => preferences.menuBarVisible);

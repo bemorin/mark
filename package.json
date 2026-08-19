@@ -1,6 +1,6 @@
 {
   "name": "mark-desktop",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A minimal, local-first Markdown editor with live preview for Windows, macOS, and Linux.",
   "main": "src/main.js",
   "author": "Ben Morin",
@@ -27,6 +27,9 @@
   "build": {
     "appId": "app.mark.editor",
     "productName": "Mark",
+    "extraMetadata": {
+      "description": "Mark"
+    },
     "asar": true,
     "directories": {
       "output": "release"
@@ -64,6 +67,8 @@
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
+      "shortcutName": "Mark",
+      "uninstallDisplayName": "Mark",
       "artifactName": "Mark-Setup-${version}-${arch}.${ext}",
       "differentialPackage": false
     },

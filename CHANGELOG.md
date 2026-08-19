@@ -6,6 +6,19 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-08-19
+
+### Added
+
+- Pin or unpin the current document with the pin button to the left of the file name (up to 3). Pinned files appear under File → Pinned.
+
+### Changed
+
+- Windows Open with now labels the app as Mark instead of the long package description.
+- File → Recent and File → Pinned are native submenus. Click a file to open it.
+- The status bar shows editor, split, and preview as three explicit view buttons.
+- The app opens in split view.
+
 ## [1.0.0] - 2026-08-18
 
 ### Added

@@ -121,6 +121,27 @@ button { color: inherit; }
   white-space: nowrap;
 }
 
+.pin-button {
+  width: 20px;
+  height: 26px;
+  margin: 0 1px 0 0;
+  color: var(--muted);
+  flex: 0 0 auto;
+}
+
+.pin-button svg {
+  width: 15px;
+  height: 15px;
+}
+
+.pin-button.is-pinned {
+  color: var(--ink);
+}
+
+.pin-button.is-pinned svg path:first-child {
+  fill: currentColor;
+}
+
 .dirty-dot {
   width: 5px;
   height: 5px;
@@ -159,8 +180,13 @@ button { color: inherit; }
 }
 
 .icon-button:hover { background: var(--hover); }
+.icon-button:disabled {
+  opacity: 0.38;
+  cursor: default;
+}
+.icon-button:disabled:hover { background: transparent; }
 .icon-button:focus-visible,
-.status-button:focus-visible,
+.view-switch-button:focus-visible,
 .toc-jump:focus-visible,
 .toc-drag-handle:focus-visible,
 .toc-confirm-button:focus-visible {
@@ -586,16 +612,36 @@ button { color: inherit; }
   opacity: 0.78;
 }
 
-.status-button {
-  padding: 3px 5px;
+.view-switch {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: stretch;
+  overflow: hidden;
+  border: 1px solid var(--faint);
+  border-radius: 6px;
+}
+
+.view-switch-button {
+  padding: 2px 8px;
   border: 0;
-  border-radius: 4px;
   background: transparent;
-  color: inherit;
+  color: var(--muted);
   cursor: pointer;
 }
 
-.status-button:hover { background: var(--hover); }
+.view-switch-button + .view-switch-button {
+  border-left: 1px solid var(--faint);
+}
+
+.view-switch-button:hover {
+  color: var(--ink);
+  background: var(--hover);
+}
+
+.view-switch-button.is-active {
+  color: var(--ink);
+  background: var(--hover);
+}
 
 .app[data-view="editor"] .workspace { grid-template-columns: minmax(0, 1fr); }
 .app[data-view="editor"] .preview-pane,

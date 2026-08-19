@@ -15,6 +15,12 @@
       <header class="topbar">
         <div class="document-name" aria-live="polite">
           <span id="dirtyDot" class="dirty-dot" aria-hidden="true"></span>
+          <button id="pinButton" class="icon-button pin-button" type="button" aria-pressed="false" data-i18n-aria="pinFile" data-i18n-title="pinFile" aria-label="Épingler" title="Épingler" disabled>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M9 4h6l-1.2 6.5 2.7 2.7V15H7.5v-1.8l2.7-2.7L9 4Z"></path>
+              <path d="M12 15v5"></path>
+            </svg>
+          </button>
           <span id="fileName" data-i18n="untitled">Sans titre.md</span>
         </div>
         <div class="topbar-actions">
@@ -105,7 +111,11 @@
           <span class="status-separator" aria-hidden="true">·</span>
           <span id="saveStatus" class="save-status" data-i18n="saved">enregistré</span>
         </div>
-        <button id="viewMode" class="status-button" type="button" data-i18n-title="changeViewTitle" title="Changer de vue — Ctrl/⌘ + 1, 2 ou 3">partagé</button>
+        <div class="view-switch" role="group" data-i18n-aria="viewSwitch" aria-label="Changer de vue">
+          <button id="viewEditor" class="view-switch-button" type="button" data-view="editor" data-i18n="viewEditor" data-i18n-title="viewEditorTitle" title="Éditeur — Ctrl/⌘ + 1">éditeur</button>
+          <button id="viewSplit" class="view-switch-button" type="button" data-view="split" data-i18n="viewSplit" data-i18n-title="viewSplitTitle" title="Partagé — Ctrl/⌘ + 2">partagé</button>
+          <button id="viewPreview" class="view-switch-button" type="button" data-view="preview" data-i18n="viewPreview" data-i18n-title="viewPreviewTitle" title="Aperçu — Ctrl/⌘ + 3">aperçu</button>
+        </div>
       </footer>
     </div>
 
@@ -165,6 +175,8 @@
             </section>
           </div>
 
+          <p class="help-note" data-i18n-html="pinHelp"><strong>Épinglés :</strong> l’épingle à gauche du nom du fichier ajoute le document ouvert à <em>Fichier → Épinglés</em> (3 maximum). Un second clic la retire.</p>
+          <p class="help-note" data-i18n-html="viewHelp"><strong>Vues :</strong> en bas à droite, choisis <em>éditeur</em>, <em>partagé</em> ou <em>aperçu</em>. Raccourcis : <kbd>⌘/Ctrl</kbd> + <kbd>1</kbd>, <kbd>2</kbd> ou <kbd>3</kbd>.</p>
           <p class="help-note" data-i18n-html="previewEditHelp"><strong>Aperçu éditable :</strong> survole un titre, un paragraphe, une liste, une citation, un tableau ou un bloc de code, puis clique sur le petit crayon qui apparaît à gauche. Valide avec <kbd>⌘/Ctrl</kbd> + <kbd>Entrée</kbd>, ou clique ailleurs.</p>
           <p class="help-note" data-i18n-html="tocDragHelp"><strong>Réorganiser :</strong> ouvre la table des matières, puis fais glisser la poignée d’un titre. Le déplacement de toute sa section n’est appliqué qu’après validation.</p>
           <p class="help-note" data-i18n-html="recoveryHelp">Les changements non enregistrés sont copiés localement pour pouvoir être restaurés après une fermeture imprévue. Dépose un fichier <code>.md</code> dans la fenêtre pour le charger dans cette même fenêtre.</p>

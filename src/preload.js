@@ -18,6 +18,7 @@ contextBridge.exposeInMainWorld('markdownApp', {
   openLink: (href) => ipcRenderer.invoke('shell:open-link', href),
   toggleMenuBar: () => ipcRenderer.invoke('menu:toggle'),
   getMenuBarState: () => ipcRenderer.invoke('menu:get-state'),
+  togglePinnedFile: () => ipcRenderer.invoke('files:toggle-pin'),
   saveRecovery: (state) => ipcRenderer.invoke('recovery:save', state),
   getRecovery: () => ipcRenderer.invoke('recovery:get'),
   clearRecovery: () => ipcRenderer.invoke('recovery:clear'),
