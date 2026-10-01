@@ -17,7 +17,7 @@
     "dist:mac:universal": "electron-builder --mac --universal --publish never"
   },
   "dependencies": {
-    "dompurify": "3.4.13",
+    "dompurify": "3.4.16",
     "marked": "18.0.8"
   },
   "devDependencies": {
